@@ -1,31 +1,50 @@
+'use client'
+
 import ChatInputArea from '@/components/manual/chat-input-area'
-import Mascot from '@/components/manual/mascot'
 import PageHeader from '@/components/manual/page-header'
-import SuggestionButtons from '@/components/manual/suggestion-buttons'
+import { Message, Role } from '@/schema/types'
+import { useState } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
+import InititalPage from '@/components/manual/initial-page'
+
 export default function ChatInterfacePage() {
+  const [messages, setMessages] = useState<Message[]>([])
+  const [conversationStarted, setConversationStarted] = useState(false)
+
+  function handleSendMessage(content: string) {
+    const newUserMessage: Message = {
+      role: Role.USER,
+      content,
+    }
+    setMessages((prevMessages) => [...prevMessages, newUserMessage])
+    setConversationStarted(true)
+
+    setTimeout(() => {
+      const assistantResponse: Message = {
+        role: Role.ASSISTANT,
+        content: `This is a simulated response to the earlier message provided by  the user. The content of the user message was following ->\n ${content}`,
+      }
+      setMessages((prevMessages) => [...prevMessages, assistantResponse])
+    }, 3000)
+  }
+
   return (
     <div className="flex h-screen flex-col items-center">
       <PageHeader />
-      <div className="relative -top-12 flex h-full w-full max-w-3xl flex-col items-center justify-center gap-3 px-4 text-center">
-        {/* Hero section */}
-        <header className="flex flex-col items-center gap-3 md:gap-0">
-          <div className="flex flex-wrap items-center justify-center md:gap-3">
-            <Mascot className="size-20 md:size-16" />
-            <h1 className="font-display text-5xl leading-9 font-semibold text-balance">
-              Welcome, I am Aman Rawat
-            </h1>
-          </div>
-          <p className="text-sm leading-tight text-balance">
-            This Assistant can help you with questions about my work and
-            projects.
-          </p>
-        </header>
-
-        {/* Chat Area */}
-        <ChatInputArea />
-        {/* Suggestions  */}
-        <SuggestionButtons />
-      </div>
+      <AnimatePresence mode="wait">
+        {conversationStarted ? (
+          <motion.div key="chat" className="h-full w-full bg-red-100">
+            <motion.div
+              layoutId="chat-input-area"
+              className="fixed bottom-0 w-full p-2"
+            >
+              <ChatInputArea />
+            </motion.div>
+          </motion.div>
+        ) : (
+          <InititalPage />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

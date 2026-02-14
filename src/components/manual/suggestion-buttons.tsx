@@ -8,7 +8,8 @@ import {
   University,
 } from 'lucide-react'
 import { Button } from './motion-wrapped-components'
-import { easeOut, motion, Variants } from 'motion/react'
+import { AnimatePresence, easeOut, motion, Variants } from 'motion/react'
+import { useState } from 'react'
 
 const suggestions = [
   {
@@ -47,7 +48,7 @@ const parentVariants: Variants = {
       duration: 0.35,
       ease: easeOut,
       delayChildren: 0.15,
-      staggerChildren: 0.2,
+      staggerChildren: 0.15,
     },
   },
 }
@@ -65,25 +66,34 @@ const childVariants: Variants = {
 }
 
 export default function SuggestionButtons() {
+  const [state, setState] = useState(true)
   return (
     <motion.div
+      key={state ? 'show-suggestions' : 'hide-suggestions'}
       variants={parentVariants}
       initial="hidden"
       animate="visible"
+      exit="exit"
       className="-mt-20 flex w-full flex-wrap justify-center gap-2"
     >
-      {suggestions.map(({ icon, message }) => (
-        <Button
-          variants={childVariants}
-          key={message}
-          variant={'outline'}
-          size={'sm'}
-          className="flex items-center gap-2"
-        >
-          {icon}
-          {message}
-        </Button>
-      ))}
+      <AnimatePresence mode="popLayout">
+        {state &&
+          suggestions.map(({ icon, message }) => (
+            <Button
+              variants={childVariants}
+              key={message}
+              variant={'outline'}
+              size={'sm'}
+              className="flex items-center gap-2"
+            >
+              {icon}
+              {message}
+            </Button>
+          ))}
+      </AnimatePresence>
+      <Button variants={childVariants} onClick={() => setState(!state)}>
+        Toggle
+      </Button>
     </motion.div>
   )
 }
