@@ -1,3 +1,5 @@
+'use client'
+
 import {
   BriefcaseBusiness,
   Code,
@@ -5,7 +7,8 @@ import {
   DraftingCompass,
   University,
 } from 'lucide-react'
-import { Button } from '../ui/button'
+import { Button } from './motion-wrapped-components'
+import { easeOut, motion, Variants } from 'motion/react'
 
 const suggestions = [
   {
@@ -30,11 +33,48 @@ const suggestions = [
   },
 ]
 
+const parentVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    y: -20,
+    filter: 'blur(6px)',
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: 'blur(0px)',
+    transition: {
+      duration: 0.35,
+      ease: easeOut,
+      delayChildren: 0.15,
+      staggerChildren: 0.2,
+    },
+  },
+}
+
+const childVariants: Variants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.3,
+      ease: easeOut,
+    },
+  },
+}
+
 export default function SuggestionButtons() {
   return (
-    <div className="-mt-20 flex w-full flex-wrap justify-center gap-2">
+    <motion.div
+      variants={parentVariants}
+      initial="hidden"
+      animate="visible"
+      className="-mt-20 flex w-full flex-wrap justify-center gap-2"
+    >
       {suggestions.map(({ icon, message }) => (
         <Button
+          variants={childVariants}
           key={message}
           variant={'outline'}
           size={'sm'}
@@ -44,6 +84,6 @@ export default function SuggestionButtons() {
           {message}
         </Button>
       ))}
-    </div>
+    </motion.div>
   )
 }
