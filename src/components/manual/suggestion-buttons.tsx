@@ -65,19 +65,22 @@ const childVariants: Variants = {
   },
 }
 
-export default function SuggestionButtons() {
-  const [state, setState] = useState(true)
+export default function SuggestionButtons({
+  isMessageTyped,
+}: Readonly<{
+  isMessageTyped: boolean
+}>) {
   return (
     <motion.div
-      key={state ? 'show-suggestions' : 'hide-suggestions'}
+      key={isMessageTyped ? 'hide-suggestions' : 'show-suggestions'}
       variants={parentVariants}
       initial="hidden"
       animate="visible"
       exit="exit"
-      className="-mt-20 flex w-full flex-wrap justify-center gap-2"
+      className="flex w-full flex-wrap justify-center gap-2"
     >
       <AnimatePresence mode="popLayout">
-        {state &&
+        {!isMessageTyped &&
           suggestions.map(({ icon, message }) => (
             <Button
               variants={childVariants}
@@ -91,9 +94,6 @@ export default function SuggestionButtons() {
             </Button>
           ))}
       </AnimatePresence>
-      <Button variants={childVariants} onClick={() => setState(!state)}>
-        Toggle
-      </Button>
     </motion.div>
   )
 }
