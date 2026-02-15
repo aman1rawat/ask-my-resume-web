@@ -38,7 +38,11 @@ export default function ChatInterfacePage() {
     }, 3000)
   }
 
-  const onSubmit: SubmitHandler<MessageFormData> = (data) => console.log(data)
+  const onSubmit: SubmitHandler<MessageFormData> = (data) => {
+    console.log(data)
+    // handleSendMessage(data.message)
+  }
+
 
   return (
     <div className="flex h-screen flex-col items-center">
@@ -50,16 +54,13 @@ export default function ChatInterfacePage() {
               layoutId="chat-input-area"
               className="fixed bottom-0 w-full p-2"
             >
-              <ChatInputArea form={messageForm} onSubmit={onSubmit} />
+              <ChatInputArea {...messageForm} onSubmit={onSubmit} />
             </motion.div>
           </motion.div>
         ) : (
-          <InititalPage  form={messageForm} onSubmit={onSubmit}/>
+          <InititalPage form={messageForm} onSubmit={onSubmit} />
         )}
       </AnimatePresence>
     </div>
   )
 }
-
-
-// ! Was trying to create a form and pass it, and check of on submit it logs the data or not. 

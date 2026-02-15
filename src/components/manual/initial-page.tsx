@@ -12,21 +12,21 @@ type InititalPageProps = Readonly<{
 
 export default function InititalPage({ form, onSubmit }: InititalPageProps) {
   const state = form.formState.isDirty
-  console.log(state)
+
   return (
     <div className="relative -top-12 flex h-full w-full max-w-3xl flex-col items-center justify-center gap-3 px-4 text-center">
       {/* Hero section */}
       <HeroSection />
       {/* Chat Area */}
       <motion.div
-        className="w-full"
+        className="w-full h-56"
         layoutId="chat-input-area"
         key={'chat-input-area'}
       >
-        <ChatInputArea form={form} onSubmit={onSubmit} />
+        <ChatInputArea {...form} onSubmit={onSubmit} />
       </motion.div>
+      <SuggestionButtons isMessageTyped={state} setValue={form.setValue} setFocus={form.setFocus} />
       {/* Suggestions  */}
-      <SuggestionButtons isMessageTyped={state} />
     </div>
   )
 }

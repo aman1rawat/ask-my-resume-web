@@ -8,29 +8,40 @@ import {
   University,
 } from 'lucide-react'
 import { Button } from './motion-wrapped-components'
-import { AnimatePresence, easeOut, motion, Variants } from 'motion/react'
-import { useState } from 'react'
+import { easeOut, motion, Variants } from 'motion/react'
+import { UseFormSetFocus, UseFormSetValue } from 'react-hook-form'
+import { MessageFormData } from '@/validation/schema'
 
 const suggestions = [
   {
     icon: <Code />,
-    message: 'Projects',
+    key: 'Projects',
+    message:
+      'Hey, Aman I want to know about your projects that you have worked on.',
   },
   {
-    message: 'Experience',
+    key: 'Experience',
     icon: <BriefcaseBusiness />,
+    message:
+      'Hey, Aman I want to know about your work experience, the companies you have worked for and the roles you have held.',
   },
   {
-    message: 'Skills',
+    key: 'Skills',
     icon: <DraftingCompass />,
+    message:
+      'Hey, Aman I want to know about your skills, both technical and soft skills that you possess.',
   },
   {
-    message: 'Education',
+    key: 'Education',
     icon: <University />,
+    message:
+      'Hey, Aman I want to know about your educational background, the degrees you have earned and the institutions you attended.',
   },
   {
-    message: 'Contact',
+    key: 'Contact',
     icon: <Contact />,
+    message:
+      'Hey, Aman I want to know about your contact information, such as your email address or phone number or some social media links.',
   },
 ]
 
@@ -65,11 +76,17 @@ const childVariants: Variants = {
   },
 }
 
+type SuggestionButtonsProps = Readonly<{
+  isMessageTyped: boolean
+  setValue: UseFormSetValue<MessageFormData>
+  setFocus: UseFormSetFocus<MessageFormData>
+}>
+
 export default function SuggestionButtons({
   isMessageTyped,
-}: Readonly<{
-  isMessageTyped: boolean
-}>) {
+  setValue,
+  setFocus,
+}: SuggestionButtonsProps) {
   return (
     <motion.div
       key={isMessageTyped ? 'hide-suggestions' : 'show-suggestions'}
@@ -77,23 +94,29 @@ export default function SuggestionButtons({
       initial="hidden"
       animate="visible"
       exit="exit"
-      className="flex w-full flex-wrap justify-center gap-2"
+      className="-mt-20 flex min-h-20 w-full flex-wrap justify-center gap-2 md:min-h-10"
     >
-      <AnimatePresence mode="popLayout">
-        {!isMessageTyped &&
-          suggestions.map(({ icon, message }) => (
-            <Button
-              variants={childVariants}
-              key={message}
-              variant={'outline'}
-              size={'sm'}
-              className="flex items-center gap-2"
-            >
-              {icon}
-              {message}
-            </Button>
-          ))}
-      </AnimatePresence>
+      {!isMessageTyped &&
+        suggestions.map(({ icon, key, message }) => (
+          <Button
+            variants={childVariants}
+            key={key}
+            variant={'outline'}
+            size={'sm'}
+            className="flex items-center gap-2"
+            onClick={() => {
+              setFocus('message', {
+                shouldSelect: true,
+              })
+              setValue('message', message, {
+                shouldDirty: true,
+              })
+            }}
+          >
+            {icon}
+            {key}
+          </Button>
+        ))}
     </motion.div>
   )
 }
