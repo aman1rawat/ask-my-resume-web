@@ -2,17 +2,9 @@
 
 import { useTheme } from 'next-themes'
 import { ThemeChangerSwitch } from './theme-changer-switch'
-import { useEffect, useState } from 'react'
 
 export function ToggleTheme() {
-  const [mounted, setMounted] = useState(false)
-
   const { theme, setTheme } = useTheme()
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMounted(true)
-  }, [])
 
   function toggleTheme(value: boolean) {
     const newTheme = value ? 'dark' : 'light'
@@ -28,10 +20,6 @@ export function ToggleTheme() {
   }
 
   const isDark = theme === 'dark'
-
-  if (!mounted) {
-    return null
-  }
 
   return (
     <ThemeChangerSwitch
