@@ -2,34 +2,26 @@
 
 import ChatInputArea from '@/components/manual/chat-input-area'
 import PageHeader from '@/components/manual/page-header'
-import { Message, Role } from '@/validation/types'
-import { useState } from 'react'
-import { AnimatePresence, easeOut, motion } from 'motion/react'
+import { Message as MessageType, Role } from '@/validation/types'
+import { useEffect, useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import InititalPage from '@/components/manual/initial-page'
 import { useForm } from 'react-hook-form'
 import { MessageFormData, messageSchema } from '@/validation/schema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Mascot from '@/components/manual/mascot'
+import Message from '@/components/manual/message'
 
-const initialMessageAnimation = {
-  opacity: 0,
-  y: -20,
-  filter: 'blur(6px)',
-}
-
-const animateMessageTo = {
-  opacity: 1,
-  y: 0,
-  filter: 'blur(0px)',
-  transition: {
-    duration: 0.35,
-    ease: easeOut,
-  },
-}
-
+const SCROLL_THRESHOLD = 100
 export default function ChatInterfacePage() {
-  const [messages, setMessages] = useState<Message[]>([])
+  const [messages, setMessages] = useState<MessageType[]>([])
   const [conversationStarted, setConversationStarted] = useState(false)
+
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true)
+
+  const containerRef = useRef<HTMLDivElement>(null)
+  const messageEndRef = useRef<HTMLDivElement>(null)
 
   const messageForm = useForm<MessageFormData>({
     defaultValues: {
@@ -38,8 +30,11 @@ export default function ChatInterfacePage() {
     resolver: zodResolver(messageSchema),
   })
 
+  // handlse submit logic when the user sends a message
   function handleSendMessage({ message }: MessageFormData) {
-    const newUserMessage: Message = {
+    setIsGenerating(true)
+    setShouldAutoScroll(true)
+    const newUserMessage: MessageType = {
       role: Role.USER,
       content: message,
     }
@@ -48,55 +43,94 @@ export default function ChatInterfacePage() {
     messageForm.resetField('message')
     messageForm.setFocus('message')
     setTimeout(() => {
-      const assistantResponse: Message = {
+      const assistantResponse: MessageType = {
         role: Role.ASSISTANT,
-        content: `This is a simulated response to the earlier message provided by  the user. The content of the user message was following ->\n ${message}`,
+        content: `This is a simulated response to the earlier message provided by the user. \nThe content of the user message was following ->\n ${message}`,
       }
       setMessages((prevMessages) => [...prevMessages, assistantResponse])
     }, 3000)
+
+    setTimeout(() => {
+      setIsGenerating(false)
+    }, 3500)
   }
 
-  function renderMessage(msg: Message, index: number) {
-    if (msg.role === Role.USER) {
-      return (
-        <motion.div
-          key={index}
-          initial={initialMessageAnimation}
-          animate={animateMessageTo}
-          className="bg-accent text-accent-foreground mt-12 mb-4 max-w-[80%] self-end rounded-lg px-4 py-2 shadow-sm"
-        >
-          {msg.content}
-        </motion.div>
-      )
+  // helper function for scrolling purpose
+  function isUserNearBottom() {
+    if (!containerRef.current) {
+      return true
     }
 
-    return (
-      <motion.div
-        key={index}
-        initial={initialMessageAnimation}
-        animate={animateMessageTo}
-        className="text-foreground self-start"
-      >
-        {msg.content}
-      </motion.div>
-    )
+    const { scrollTop, scrollHeight, clientHeight } = containerRef.current
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight
+
+    return distanceFromBottom < SCROLL_THRESHOLD
   }
+
+  // helper function too
+  function scrollToBottom() {
+    if (!messageEndRef.current) {
+      return
+    }
+
+    messageEndRef.current.scrollIntoView({
+      behavior: 'smooth',
+    })
+  }
+
+  // side effect to add event listener for scroll and decides to update autoscroll state
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    function handleScroll() {
+      console.log(isUserNearBottom(), ' : bottom ')
+      if (isUserNearBottom()) {
+        setShouldAutoScroll(true)
+      } else {
+        setShouldAutoScroll(false)
+      }
+    }
+
+    container.addEventListener('scroll', handleScroll)
+    return () => container.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  //  side effect to scroll to bottom when a new message is generating and user didnt forcefully wanted to scroll up
+  useEffect(() => {
+    if (isGenerating && shouldAutoScroll) {
+      scrollToBottom()
+    }
+  }, [messages, isGenerating, shouldAutoScroll])
+
   return (
-    <div className="flex h-screen flex-col items-center">
+    <div
+      // ref={containerRef}
+      className="scrollbar flex h-screen flex-col items-center"
+    >
       <PageHeader />
       <AnimatePresence mode="wait">
         {conversationStarted ? (
           <motion.div
             key="chat"
-            className="relative flex h-full w-full justify-center p-4"
+            className="relative flex w-full flex-1 justify-center p-4"
           >
-            {/* messages area */}
-            <motion.div layout className="flex w-full max-w-2xl flex-col px-2">
-              {messages.map((msg, index) => renderMessage(msg, index))}
-              <motion.div layout>
+            {/* messages container */}
+            <motion.div
+              layout
+              className="scrollbar flex w-full max-w-2xl flex-col overflow-y-auto px-2"
+              ref={containerRef}
+            >
+              {messages.map((msg, index) => (
+                <Message key={index} msg={msg} />
+              ))}
+
+              <div ref={messageEndRef} />
+
+              <motion.div layout layoutId="mascot">
                 <Mascot className="size-12 self-start" />
               </motion.div>
-              <div className="min-h-[25rem]" />
+              <div className="min-h-60" />
             </motion.div>
 
             <motion.div
@@ -113,3 +147,5 @@ export default function ChatInterfacePage() {
     </div>
   )
 }
+
+// ! Code is getting confusing start adding comments
