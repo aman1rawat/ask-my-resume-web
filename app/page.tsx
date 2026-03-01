@@ -11,6 +11,7 @@ import { MessageFormData, messageSchema } from '@/validation/schema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Mascot from '@/components/manual/mascot'
 import Message from '@/components/manual/message'
+import { useSendMessage } from '@/hooks/ai-queries'
 
 const SCROLL_THRESHOLD = 100
 export default function ChatInterfacePage() {
@@ -29,30 +30,14 @@ export default function ChatInterfacePage() {
     },
     resolver: zodResolver(messageSchema),
   })
+  const sendMessage = useSendMessage()
 
   // handlse submit logic when the user sends a message
   function handleSendMessage({ message }: MessageFormData) {
-    setIsGenerating(true)
     setShouldAutoScroll(true)
-    const newUserMessage: MessageType = {
-      role: Role.USER,
-      content: message,
-    }
-    setMessages((prevMessages) => [...prevMessages, newUserMessage])
     setConversationStarted(true)
-    messageForm.resetField('message')
-    messageForm.setFocus('message')
-    setTimeout(() => {
-      const assistantResponse: MessageType = {
-        role: Role.ASSISTANT,
-        content: `This is a simulated response to the earlier message provided by the user. \nThe content of the user message was following ->\n ${message}`,
-      }
-      setMessages((prevMessages) => [...prevMessages, assistantResponse])
-    }, 3000)
-
-    setTimeout(() => {
-      setIsGenerating(false)
-    }, 3500)
+    sendMessage(message, setMessages, setIsGenerating)
+    messageForm.reset()
   }
 
   // helper function for scrolling purpose
@@ -104,10 +89,7 @@ export default function ChatInterfacePage() {
   }, [messages, isGenerating, shouldAutoScroll])
 
   return (
-    <div
-      // ref={containerRef}
-      className="scrollbar flex h-screen flex-col items-center"
-    >
+    <div className="scrollbar flex h-screen flex-col items-center">
       <PageHeader />
       <AnimatePresence mode="wait">
         {conversationStarted ? (
@@ -116,8 +98,7 @@ export default function ChatInterfacePage() {
             className="relative flex w-full flex-1 justify-center p-4"
           >
             {/* messages container */}
-            <motion.div
-              layout
+            <div
               className="scrollbar flex w-full max-w-2xl flex-col overflow-y-auto px-2"
               ref={containerRef}
             >
@@ -128,10 +109,10 @@ export default function ChatInterfacePage() {
               <div ref={messageEndRef} />
 
               <motion.div layout layoutId="mascot">
-                <Mascot className="size-12 self-start" />
+                <Mascot className="my-2 size-12 self-start" />
               </motion.div>
               <div className="min-h-60" />
-            </motion.div>
+            </div>
 
             <motion.div
               layoutId="chat-input-area"
